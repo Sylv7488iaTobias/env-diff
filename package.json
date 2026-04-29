@@ -1,0 +1,33 @@
+{
+  "name": "env-diff",
+  "version": "0.1.0",
+  "description": "CLI utility to compare .env files across environments and flag missing or mismatched keys",
+  "main": "dist/index.js",
+  "bin": {
+    "env-diff": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": ["env", "dotenv", "cli", "diff", "environment"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/*.test.ts"]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
