@@ -49,3 +49,18 @@ export function formatHeader(file1: string, file2: string, options: FormatOption
   const header = `Comparing: ${file1} <-> ${file2}`;
   return colorize(header, BOLD, options.color);
 }
+
+/**
+ * Formats a summary line showing the count of missing, mismatched, and matching keys.
+ */
+export function formatSummary(
+  missingCount: number,
+  mismatchCount: number,
+  okCount: number,
+  options: FormatOptions
+): string {
+  const missing = colorize(`${missingCount} missing`, missingCount > 0 ? RED : RESET, options.color);
+  const mismatched = colorize(`${mismatchCount} mismatched`, mismatchCount > 0 ? YELLOW : RESET, options.color);
+  const ok = colorize(`${okCount} matching`, okCount > 0 ? GREEN : RESET, options.color);
+  return `\nSummary: ${missing}, ${mismatched}, ${ok}`;
+}
