@@ -1,65 +1,58 @@
-import { parseEnvFile } from './parser';
+/**
+ * Core diffing logic for comparing two env maps.
+ */
+
+export type DiffStatus = 'missing' | 'mismatch' | 'ok';
 
 export interface DiffResult {
-  missingInTarget: string[];
-  missingInSource: string[];
-  mismatchedValues: Array<{ key: string; sourceValue: string; targetValue: string }>;
-  matching: string[];
+  key: string;
+  status: DiffStatus;
+  baseValue: string | undefined;
+  compareValue: string | undefined;
 }
 
-export interface EnvMap {
-  [key: string]: string;
-}
+export type EnvMap = Map<string, string>;
 
-export function diffEnvMaps(source: EnvMap, target: EnvMap): DiffResult {
-  const sourceKeys = new Set(Object.keys(source));
-  const targetKeys = new Set(Object.keys(target));
+/**
+ * Compare two env maps and return a list of diff results.
+ * Keys from both maps are considered.
+ */
+export function diffEnvMaps(base: EnvMap, compare: EnvMap): DiffResult[] {
+  const allKeys = new Set([...base.keys(), ...compare.keys()]);
+  const results: DiffResult[] = [];
 
-  const missingInTarget: string[] = [];
-  const missingInSource: string[] = [];
-  const mismatchedValues: DiffResult['mismatchedValues'] = [];
-  const matching: string[] = [];
+  for (const key of allKeys) {
+    const baseValue = base.get(key);
+    const compareValue = compare.get(key);
 
-  for (const key of sourceKeys) {
-    if (!targetKeys.has(key)) {
-      missingInTarget.push(key);
-    } else if (source[key] !== target[key]) {
-      mismatchedValues.push({
-        key,
-        sourceValue: source[key],
-        targetValue: target[key],
-      });
+    if (baseValue !== undefined && compareValue === undefined) {
+      results.push({ key, status: 'missing', baseValue, compareValue: undefined });
+    } else if (baseValue === undefined && compareValue !== undefined) {
+      results.push({ key, status: 'missing', baseValue: undefined, compareValue });
+    } else if (baseValue !== compareValue) {
+      results.push({ key, status: 'mismatch', baseValue, compareValue });
     } else {
-      matching.push(key);
+      results.push({ key, status: 'ok', baseValue, compareValue });
     }
   }
 
-  for (const key of targetKeys) {
-    if (!sourceKeys.has(key)) {
-      missingInSource.push(key);
-    }
+  return results.sort((a, b) => a.key.localeCompare(b.key));
+}
+
+/**
+ * Returns true if there are any missing or mismatched keys.
+ */
+export function hasDifferences(results: DiffResult[]): boolean {
+  return results.some((r) => r.status === 'missing' || r.status === 'mismatch');
+}
+
+/**
+ * Returns a summary count of each status type.
+ */
+export function summarizeDiff(results: DiffResult[]): Record<DiffStatus, number> {
+  const summary: Record<DiffStatus, number> = { missing: 0, mismatch: 0, ok: 0 };
+  for (const result of results) {
+    summary[result.status]++;
   }
-
-  return {
-    missingInTarget: missingInTarget.sort(),
-    missingInSource: missingInSource.sort(),
-    mismatchedValues: mismatchedValues.sort((a, b) => a.key.localeCompare(b.key)),
-    matching: matching.sort(),
-  };
-}
-
-export async function diffEnvFiles(sourcePath: string, targetPath: string): Promise<DiffResult> {
-  const [source, target] = await Promise.all([
-    parseEnvFile(sourcePath),
-    parseEnvFile(targetPath),
-  ]);
-  return diffEnvMaps(source, target);
-}
-
-export function hasDifferences(result: DiffResult): boolean {
-  return (
-    result.missingInTarget.length > 0 ||
-    result.missingInSource.length > 0 ||
-    result.mismatchedValues.length > 0
-  );
+  return summary;
 }
