@@ -13,6 +13,13 @@ const sampleResult: DiffResult = {
   matching: [{ key: 'PORT', leftValue: '3000', rightValue: '3000' }],
 };
 
+const emptyResult: DiffResult = {
+  missingInRight: [],
+  missingInLeft: [],
+  mismatched: [],
+  matching: [],
+};
+
 describe('renderTextOutput', () => {
   it('includes file names in header', () => {
     const out = renderTextOutput(sampleResult, '.env', '.env.prod', noColor);
@@ -47,6 +54,12 @@ describe('renderTextOutput', () => {
     const out = renderTextOutput(sampleResult, '.env', '.env.prod', noColor);
     expect(out).toContain('Summary:');
     expect(out).toContain('3 issue(s)');
+  });
+
+  it('shows 0 issues in summary when result is empty', () => {
+    const out = renderTextOutput(emptyResult, '.env', '.env.prod', noColor);
+    expect(out).toContain('Summary:');
+    expect(out).toContain('0 issue(s)');
   });
 });
 
