@@ -68,3 +68,20 @@ export function getIncompleteKeys(result: MergeResult): string[] {
     )
     .map((e) => e.key);
 }
+
+/**
+ * Returns keys whose values differ across at least two sources.
+ * Keys that are missing from one or more sources are excluded
+ * since they are already captured by getIncompleteKeys.
+ */
+export function getConflictingKeys(result: MergeResult): string[] {
+  return result.entries
+    .filter((e) => {
+      const presentValues = result.sources
+        .map((s) => e.values[s])
+        .filter((v): v is string => v !== undefined);
+      if (presentValues.length < 2) return false;
+      return new Set(presentValues).size > 1;
+    })
+    .map((e) => e.key);
+}
